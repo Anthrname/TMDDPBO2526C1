@@ -9,7 +9,7 @@ mkdir out
 echo [2/3] Mengkompilasi seluruh kode sumber Java...
 for /R src %%f in (*.java) do set SOURCES=!SOURCES! "%%f"
 
-javac -encoding UTF-8 -d out -cp "src;lib\mysql-connector-j-8.3.0.jar;lib\sqlite-jdbc-3.45.1.0.jar" ^
+javac -encoding UTF-8 -d out -cp "src;lib\mysql-connector-j-8.3.0.jar;lib\sqlite-jdbc-3.43.2.2.jar;lib\slf4j-api-2.0.9.jar;lib\slf4j-nop-2.0.9.jar" ^
   src\Main.java ^
   src\ecowarrior\config\GameConfig.java ^
   src\ecowarrior\model\Achievement.java ^
@@ -27,6 +27,7 @@ javac -encoding UTF-8 -d out -cp "src;lib\mysql-connector-j-8.3.0.jar;lib\sqlite
   src\ecowarrior\entity\Bunker.java ^
   src\ecowarrior\audio\AudioSynthesizer.java ^
   src\ecowarrior\audio\SoundManager.java ^
+  src\ecowarrior\view\IsometricRenderer.java ^
   src\ecowarrior\view\IMenuView.java ^
   src\ecowarrior\view\IGameView.java ^
   src\ecowarrior\view\components\ModernButton.java ^

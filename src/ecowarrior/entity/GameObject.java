@@ -18,8 +18,10 @@ import java.awt.geom.Rectangle2D;
 public abstract class GameObject {
     protected double x;
     protected double y;
+    protected double z;
     protected double vx;
     protected double vy;
+    protected double vz;
     protected double width;
     protected double height;
     protected boolean active = true;
@@ -27,10 +29,23 @@ public abstract class GameObject {
     public GameObject(double x, double y, double width, double height) {
         this.x = x;
         this.y = y;
+        this.z = 0;
         this.width = width;
         this.height = height;
         this.vx = 0;
         this.vy = 0;
+        this.vz = 0;
+    }
+
+    public GameObject(double x, double y, double z, double width, double height) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.width = width;
+        this.height = height;
+        this.vx = 0;
+        this.vy = 0;
+        this.vz = 0;
     }
 
     /**
@@ -67,6 +82,16 @@ public abstract class GameObject {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    public double getZ() { return z; }
+    public void setZ(double z) { this.z = z; }
+
+    public double getVz() { return vz; }
+    public void setVz(double vz) { this.vz = vz; }
+
+    public double getIsometricDepth() {
+        return x + y;
+    }
 
     public double getCenterX() {
         return x + width / 2.0;

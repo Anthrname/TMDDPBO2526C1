@@ -31,9 +31,14 @@ public class Particle extends GameObject {
     private String text;
 
     public Particle(double x, double y, double vx, double vy, double size, Color color, float lifeTime, Type type) {
-        super(x, y, size, size);
+        this(x, y, 0, vx, vy, 0, size, color, lifeTime, type);
+    }
+
+    public Particle(double x, double y, double z, double vx, double vy, double vz, double size, Color color, float lifeTime, Type type) {
+        super(x, y, z, size, size);
         this.vx = vx;
         this.vy = vy;
+        this.vz = vz;
         this.size = size;
         this.color = color;
         this.fadeSpeed = 1.0f / (lifeTime * 60.0f);
@@ -41,7 +46,7 @@ public class Particle extends GameObject {
     }
 
     public static Particle createFloatingText(double x, double y, String text, Color color) {
-        Particle p = new Particle(x, y, 0, -1.2, 14, color, 1.2f, Type.FLOATING_TEXT);
+        Particle p = new Particle(x, y, 10, 0, 0, 1.2, 14, color, 1.2f, Type.FLOATING_TEXT);
         p.text = text;
         return p;
     }
@@ -50,6 +55,7 @@ public class Particle extends GameObject {
     public void update(double dt) {
         x += vx;
         y += vy;
+        z += vz;
         alpha -= fadeSpeed;
         if (alpha <= 0.05f) {
             alpha = 0f;
@@ -64,19 +70,22 @@ public class Particle extends GameObject {
         var oldComposite = g2d.getComposite();
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0f, Math.min(1f, alpha))));
 
+        int drawX = (int) x;
+        int drawY = (int) (y - z);
+
         if (type == Type.FLOATING_TEXT && text != null) {
             g2d.setColor(Color.BLACK);
             g2d.setFont(new Font("SansSerif", Font.BOLD, 14));
-            g2d.drawString(text, (int) x + 1, (int) y + 1);
+            g2d.drawString(text, drawX + 1, drawY + 1);
             g2d.setColor(color);
-            g2d.drawString(text, (int) x, (int) y);
+            g2d.drawString(text, drawX, drawY);
         } else if (type == Type.SMOKE) {
             g2d.setColor(color);
             int s = (int) (size * (2.0f - alpha));
-            g2d.fillOval((int) (x - s / 2), (int) (y - s / 2), s, s);
+            g2d.fillOval((int) (drawX - s / 2), (int) (drawY - s / 2), s, s);
         } else {
             g2d.setColor(color);
-            g2d.fillOval((int) x, (int) y, (int) size, (int) size);
+            g2d.fillOval(drawX, drawY, (int) size, (int) size);
         }
 
         g2d.setComposite(oldComposite);

@@ -11,6 +11,7 @@ import ecowarrior.entity.Bunker;
 import ecowarrior.entity.Destroyer;
 import ecowarrior.entity.EcoWarrior;
 import ecowarrior.entity.Fire;
+import ecowarrior.entity.GameObject;
 import ecowarrior.entity.Particle;
 import ecowarrior.entity.WaterProjectile;
 import ecowarrior.model.GameState;
@@ -25,6 +26,7 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import javax.swing.JPanel;
@@ -87,42 +89,62 @@ public class GamePanel extends JPanel {
         int width = getWidth();
         int height = getHeight();
 
-        // 1. Gambar Latar Belakang Lanskap Hutan Alami
-        drawForestBackground(g2d, width, height);
+        // 1. Gambar Latar Belakang Lanskap Medan Hutan 3D Isometrik
+        IsometricRenderer.renderIsometricTerrain(g2d, width, height);
 
         if (gameState != null) {
-            // 2. Gambar Bunker
+            // 2. Gambar Model 3D Voxel Bunker (Kiri Bawah & Kanan Bawah)
             Bunker bDestroyer = gameState.getBunkerDestroyer();
-            if (bDestroyer != null) bDestroyer.render(g2d);
+            if (bDestroyer != null) {
+                IsometricRenderer.render3DDestroyerBunker(g2d, bDestroyer.getX(), bDestroyer.getY());
+            }
 
             Bunker bEco = gameState.getBunkerEcoWarrior();
-            if (bEco != null) bEco.render(g2d);
+            if (bEco != null) {
+                IsometricRenderer.render3DEcoWarriorBunker(g2d, bEco.getX(), bEco.getY());
+            }
 
-            // 3. Gambar Titik Api
+            // 3. Render Efek Pencahayaan Tanah Dinamis dari Titik Api (Ground Light Cast)
             List<Fire> fires = gameState.getFires();
             synchronized (fires) {
                 for (Fire f : fires) {
-                    if (f.isActive()) f.render(g2d);
+                    if (f.isActive()) {
+                        g2d.setColor(new Color(255, 120, 0, 50));
+                        g2d.fillOval((int) (f.getCenterX() - 36), (int) (f.getCenterY() - 14), 72, 28);
+                        g2d.setColor(new Color(255, 180, 0, 80));
+                        g2d.fillOval((int) (f.getCenterX() - 20), (int) (f.getCenterY() - 8), 40, 16);
+                    }
                 }
             }
 
-            // 4. Gambar Destroyer
+            // 4. Pengurutan Kedalaman Isometrik (Y-Sorting / Painter's Algorithm)
+            // Menggabungkan seluruh entitas agar saling menutupi secara realistis dalam ruang 3D
+            List<GameObject> depthSortedEntities = new ArrayList<>();
+            synchronized (fires) {
+                for (Fire f : fires) if (f.isActive()) depthSortedEntities.add(f);
+            }
             List<Destroyer> destroyers = gameState.getDestroyers();
             synchronized (destroyers) {
-                for (Destroyer d : destroyers) {
-                    if (d.isActive()) d.render(g2d);
-                }
+                for (Destroyer d : destroyers) if (d.isActive()) depthSortedEntities.add(d);
             }
-
-            // 5. Gambar Eco Warrior
             List<EcoWarrior> warriors = gameState.getEcoWarriors();
             synchronized (warriors) {
-                for (EcoWarrior w : warriors) {
-                    if (w.isActive()) w.render(g2d);
-                }
+                for (EcoWarrior w : warriors) if (w.isActive()) depthSortedEntities.add(w);
             }
 
-            // 6. Gambar Proyektil Tembakan Air
+            depthSortedEntities.sort((a, b) -> Double.compare(a.getIsometricDepth(), b.getIsometricDepth()));
+
+            // Gambar seluruh entitas sesuai urutan kedalaman dari belakang ke depan
+            for (GameObject entity : depthSortedEntities) {
+                entity.render(g2d);
+            }
+
+            // 5. Gambar Pepohonan Hutan 3D Dekoratif
+            for (IsometricRenderer.IsometricTree tree : IsometricRenderer.getDecorativeTrees()) {
+                IsometricRenderer.renderTree(g2d, tree);
+            }
+
+            // 6. Gambar Proyektil Tembakan Air Parabola 3D di Udara
             List<WaterProjectile> projectiles = gameState.getWaterProjectiles();
             synchronized (projectiles) {
                 for (WaterProjectile p : projectiles) {
@@ -130,7 +152,7 @@ public class GamePanel extends JPanel {
                 }
             }
 
-            // 7. Gambar Partikel Efek
+            // 7. Gambar Partikel Efek Visual 3D
             List<Particle> particles = gameState.getParticles();
             synchronized (particles) {
                 for (Particle pt : particles) {
@@ -138,8 +160,9 @@ public class GamePanel extends JPanel {
                 }
             }
 
-            // 8. Gambar Retikel Kursor Bidikan Mouse
-            drawTargetReticle(g2d);
+            // 8. Gambar Retikel Kursor Bidikan Mouse Isometrik 3D
+            GameObject hoveredTarget = findHoveredTarget();
+            IsometricRenderer.render3DTargetReticle(g2d, mouseX, mouseY, hoveredTarget);
 
             // 9. Gambar HUD (Heads-Up Display) di bagian atas layar
             drawHUD(g2d, width);
@@ -153,47 +176,30 @@ public class GamePanel extends JPanel {
         g2d.dispose();
     }
 
-    private void drawForestBackground(Graphics2D g2d, int w, int h) {
-        // Gradien langit sore/kehutanan
-        GradientPaint skyGradient = new GradientPaint(0, 0, new Color(40, 80, 60), 0, h * 0.45f, new Color(28, 55, 38));
-        g2d.setPaint(skyGradient);
-        g2d.fillRect(0, 0, w, h);
+    private GameObject findHoveredTarget() {
+        if (gameState == null || mouseX < 0 || mouseY < 0) return null;
 
-        // Lapisan pepohonan kejauhan
-        g2d.setColor(new Color(22, 45, 32));
-        for (int i = 0; i < w; i += 70) {
-            int treeHeight = 110 + (int) (Math.sin(i * 0.05) * 25);
-            g2d.fillOval(i - 20, (int) (h * 0.28) - treeHeight, 90, treeHeight + 60);
-        }
-
-        // Lapisan tanah hutan (Forest Ground)
-        GradientPaint groundGradient = new GradientPaint(0, h * 0.35f, new Color(34, 70, 45), 0, h, new Color(20, 44, 28));
-        g2d.setPaint(groundGradient);
-        g2d.fillRect(0, (int) (h * 0.35), w, (int) (h * 0.65));
-
-        // Tekstur rerumputan dan alur sungai kecil
-        g2d.setColor(new Color(41, 88, 56, 120));
-        for (int x = 40; x < w; x += 120) {
-            for (int y = (int) (h * 0.42); y < h - 80; y += 90) {
-                g2d.fillOval(x + (y % 40), y, 50, 16);
+        // Cari Destroyer terdekat dengan kursor bidik mouse
+        List<Destroyer> destroyers = gameState.getDestroyers();
+        synchronized (destroyers) {
+            for (Destroyer d : destroyers) {
+                if (d.isActive() && d.distanceTo(mouseX, mouseY) < 50) {
+                    return d;
+                }
             }
         }
 
-        // Alur sungai air segar di tengah bawah
-        g2d.setColor(new Color(41, 128, 185, 90));
-        g2d.setStroke(new BasicStroke(16.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        g2d.drawLine(w / 2 - 120, h, w / 2 + 140, (int) (h * 0.55));
-    }
+        // Cari Titik Api terdekat dengan kursor bidik mouse
+        List<Fire> fires = gameState.getFires();
+        synchronized (fires) {
+            for (Fire f : fires) {
+                if (f.isActive() && f.distanceTo(mouseX, mouseY) < 50) {
+                    return f;
+                }
+            }
+        }
 
-    private void drawTargetReticle(Graphics2D g2d) {
-        if (mouseX < 0 || mouseY < 0) return;
-
-        g2d.setColor(new Color(52, 152, 219, 180));
-        g2d.setStroke(new BasicStroke(1.5f));
-        int r = 16;
-        g2d.drawOval(mouseX - r, mouseY - r, r * 2, r * 2);
-        g2d.drawLine(mouseX - r - 6, mouseY, mouseX + r + 6, mouseY);
-        g2d.drawLine(mouseX, mouseY - r - 6, mouseX, mouseY + r + 6);
+        return null;
     }
 
     private void drawHUD(Graphics2D g2d, int w) {

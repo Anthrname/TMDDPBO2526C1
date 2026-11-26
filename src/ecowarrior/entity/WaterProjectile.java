@@ -18,6 +18,8 @@ import java.awt.Graphics2D;
  */
 public class WaterProjectile extends GameObject {
 
+    private final double startX;
+    private final double startY;
     private final double targetX;
     private final double targetY;
     private final double damage;
@@ -25,15 +27,23 @@ public class WaterProjectile extends GameObject {
     private final GameObject targetEntity;
     private double lifeTimer = 0;
     private final double maxLifeTime = 2.0;
+    private final double totalDistance;
+    private final double maxArcHeight;
 
     public WaterProjectile(double startX, double startY, double targetX, double targetY, 
                            double damage, boolean splash, GameObject targetEntity) {
         super(startX, startY, 14, 14);
+        this.startX = startX;
+        this.startY = startY;
         this.targetX = targetX;
         this.targetY = targetY;
         this.damage = damage;
         this.splash = splash;
         this.targetEntity = targetEntity;
+
+        this.totalDistance = Math.hypot(targetX - startX, targetY - startY);
+        this.maxArcHeight = Math.min(120.0, 30.0 + totalDistance * 0.22);
+        this.z = 10;
 
         double angle = Math.atan2(targetY - startY, targetX - startX);
         this.vx = Math.cos(angle) * GameConfig.PROJECTILE_SPEED;
@@ -46,12 +56,17 @@ public class WaterProjectile extends GameObject {
         y += vy;
         lifeTimer += dt;
 
+        // Hitung lintasan parabola 3D balistik di udara
+        double distTraveled = Math.hypot(x - startX, y - startY);
+        double progress = Math.min(1.0, distTraveled / Math.max(1.0, totalDistance));
+        this.z = Math.sin(progress * Math.PI) * maxArcHeight;
+
         if (lifeTimer >= maxLifeTime) {
             active = false;
         }
 
         // Cek apakah sudah sangat dekat dengan target
-        if (distanceTo(targetX, targetY) < 14) {
+        if (distanceTo(targetX, targetY) < 16) {
             active = false;
         }
     }
@@ -72,15 +87,28 @@ public class WaterProjectile extends GameObject {
     public void render(Graphics2D g2d) {
         if (!active) return;
 
-        // Visual bola air dengan efek kilau gradien biru cyan
-        g2d.setColor(new Color(0, 180, 255, 120));
-        g2d.fillOval((int) (x - 3), (int) (y - 3), (int) width + 6, (int) height + 6);
+        // 1. Gambar bayangan proyektil di permukaan tanah 3D (Z = 0)
+        double shadowScale = Math.max(0.4, 1.0 - (z / (maxArcHeight + 1.0)) * 0.5);
+        int sw = (int) (width * shadowScale);
+        int sh = (int) (height * 0.5 * shadowScale);
+        g2d.setColor(new Color(10, 25, 20, 100));
+        g2d.fillOval((int) (x + width / 2.0 - sw / 2.0), (int) (y + height / 2.0 - sh / 2.0), sw, sh);
 
+        // 2. Gambar bola air yang terangkat tinggi di udara sesuai koordinat Z
+        int drawY = (int) (y - z);
+        int drawX = (int) x;
+
+        // Efek aura air hidro
+        g2d.setColor(new Color(0, 200, 255, 130));
+        g2d.fillOval(drawX - 4, drawY - 4, (int) width + 8, (int) height + 8);
+
+        // Inti bola air
         g2d.setColor(new Color(41, 128, 185));
-        g2d.fillOval((int) x, (int) y, (int) width, (int) height);
+        g2d.fillOval(drawX, drawY, (int) width, (int) height);
 
-        g2d.setColor(new Color(174, 214, 241));
-        g2d.fillOval((int) x + 2, (int) y + 2, (int) width - 6, (int) height - 6);
+        // Kilau pantulan cahaya
+        g2d.setColor(new Color(212, 239, 252));
+        g2d.fillOval(drawX + 3, drawY + 2, (int) width - 7, (int) height - 7);
     }
 }
 

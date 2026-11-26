@@ -25,9 +25,29 @@
 
 ## 🎮 Deskripsi Program
 
-**ECO WARRIOR** adalah game simulasi pertahanan ekosistem hutan bergenre *Tower Defense* yang dibangun sepenuhnya menggunakan Java Swing dengan arsitektur **MVP (Model–View–Presenter)** dan **Game Loop berbasis Thread 60 FPS**.
+**ECO WARRIOR** adalah game simulasi pertahanan ekosistem hutan bergenre *Tower Defense / Tactical RTS* yang dibangun sepenuhnya menggunakan Java Swing dengan **Mesin Rendering Isometrik 2.5D / Pseudo-3D (`IsometricRenderer.java`)**, arsitektur **MVP (Model–View–Presenter)**, dan **Game Loop berbasis Thread 60 FPS**.
 
-Pemain berperan sebagai komandan Eco Warrior: mengklik unit Destroyer atau Titik Api untuk menugaskan Eco Warrior terdekat memadamkan api dan melumpuhkan perusak hutan. Seluruh statistik (achievement, destroyer, fire) tersimpan ke database MySQL secara akumulatif setiap sesi.
+Pemain berperan sebagai komandan Eco Warrior: mengklik unit Destroyer atau Titik Api untuk menugaskan Eco Warrior terdekat memadamkan api dan melumpuhkan perusak hutan. Tampilan game mengadopsi sudut pandang isometrik berdimensi 3D dengan medan berundak, tebing batu, aliran sungai, model bunker 3D voxel, dan lintasan proyektil air parabola balistik 3D. Seluruh statistik (achievement, destroyer, fire) tersimpan ke database MySQL secara akumulatif setiap sesi.
+
+---
+
+## 🌟 Fitur Unggulan Grafis 2.5D Isometrik
+
+1. **Mesin Isometrik 2:1 Prosedural (`IsometricRenderer.java`):**
+   - Transformasi koordinat matematika murni: `worldToScreen(wx, wy, wz)` dan `screenToWorld(sx, sy)`.
+   - Grid tanah berlian isometrik (diamond tiles) dengan pola catur hijau, jalan tanah berbatu, dan alur sungai berair jernih.
+   - Tebing tebal berbayang (cliff extrusion slab) memberikan sensasi daratan 3D terapung yang masif.
+2. **Model Struktur Voxel 3D:**
+   - **Bunker Destroyer:** Benteng baja heksagonal 3D dengan cerobong kembar mengepulkan asap hitam, lampu hazard merah, dan tungku api terbuka.
+   - **Bunker Eco Warrior:** Kubah kaca geodesik (Bio-Dome) dengan refleksi kilau, reaktor inti kristal hydro cyan, dan tangki air bertekanan.
+3. **Penyortiran Kedalaman 3D (Y-Sorting / Painter's Algorithm):**
+   - Seluruh entitas (pohon, bunker, pion, api, partikel) diurutkan secara dinamis berdasarkan nilai kedalaman isometrik (`getIsometricDepth()`), memastikan karakter dapat berjalan di depan maupun di belakang objek secara realistis.
+4. **Fisika Proyektil Air Parabola Balistik 3D:**
+   - Proyektil air terangkat ke udara mengikuti kurva sinus `z = sin(progress * PI) * maxArcHeight` lengkap dengan bayangan proyektil di permukaan tanah.
+5. **Pencahayaan Tanah Dinamis (Ground Light Cast):**
+   - Titik api memancarkan pendaran cahaya hangat di lantai hutan sekitarnya.
+6. **Retikel Bidik Isometrik 3D:**
+   - Kursor mouse otomatis memproyeksikan cincin bidik berlian isometrik di tanah dan mengunci target saat kursor berada dekat musuh/api.
 
 ---
 
@@ -96,6 +116,7 @@ TMD/
 │       ├── view/                          # Lapisan VIEW (MVP)
 │       │   ├── IMenuView.java             # Interface kontrak menu
 │       │   ├── IGameView.java             # Interface kontrak game
+│       │   ├── IsometricRenderer.java     # Mesin grafis Isometrik 2.5D / 3D
 │       │   ├── MenuFrame.java             # Jendela menu utama
 │       │   ├── GameFrame.java             # Jendela permainan
 │       │   ├── GamePanel.java             # Kanvas rendering 60FPS
@@ -114,7 +135,9 @@ TMD/
 │   └── db_ecowarrior.sql                  # Script SQL buat tabel + seed data
 ├── lib/
 │   ├── mysql-connector-j-8.3.0.jar        # Driver MySQL JDBC
-│   └── sqlite-jdbc-3.45.1.0.jar           # Driver SQLite JDBC (fallback)
+│   ├── sqlite-jdbc-3.43.2.2.jar           # Driver SQLite JDBC (fallback)
+│   ├── slf4j-api-2.0.9.jar                # SLF4J API Logging
+│   └── slf4j-nop-2.0.9.jar                # SLF4J NOP Logger
 ├── resources/
 │   └── sounds/                            # (Opsional) file audio kustom .wav
 ├── EcoWarrior.jar                         # File JAR executable
