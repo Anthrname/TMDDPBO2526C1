@@ -136,6 +136,18 @@ public class GameState {
     public boolean isVictory() { return victory; }
     public void setVictory(boolean victory) { this.victory = victory; }
 
+    // ---- Waktu permainan ----
+
+    private static long gameTime = 0;
+
+    public static synchronized void tick() {
+        gameTime = System.currentTimeMillis();
+    }
+
+    public static synchronized long getGameTime() {
+        return gameTime;
+    }
+
     public Bunker getBunkerDestroyer() { return bunkerDestroyer; }
     public Bunker getBunkerEcoWarrior() { return bunkerEcoWarrior; }
 

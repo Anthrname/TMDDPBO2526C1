@@ -6,6 +6,8 @@
 
 package ecowarrior.entity;
 
+import ecowarrior.assets.Atlas;
+import ecowarrior.model.GameState;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.GeneralPath;
@@ -66,36 +68,10 @@ public class Fire extends GameObject {
         g2d.setColor(new Color(60, 20, 10, 140));
         g2d.fillOval(bx - 4, by + (int) height - 8, w + 8, 14);
 
-        // Lapisan Api Luar (Merah Menyala)
-        GeneralPath outerFlame = new GeneralPath();
-        outerFlame.moveTo(bx + w * 0.1, by + h);
-        outerFlame.quadTo(bx - 6, by + h * 0.5, bx + w * 0.35, by);
-        outerFlame.quadTo(bx + w * 0.5, by + h * 0.3, bx + w * 0.65, by + 4);
-        outerFlame.quadTo(bx + w + 6, by + h * 0.5, bx + w * 0.9, by + h);
-        outerFlame.closePath();
-
-        g2d.setColor(new Color(230, 70, 20, 220));
-        g2d.fill(outerFlame);
-
-        // Lapisan Api Tengah (Oranye Emas)
-        GeneralPath midFlame = new GeneralPath();
-        midFlame.moveTo(bx + w * 0.25, by + h);
-        midFlame.quadTo(bx + w * 0.1, by + h * 0.5, bx + w * 0.5, by + h * 0.2);
-        midFlame.quadTo(bx + w * 0.9, by + h * 0.5, bx + w * 0.75, by + h);
-        midFlame.closePath();
-
-        g2d.setColor(new Color(255, 160, 20, 230));
-        g2d.fill(midFlame);
-
-        // Inti Api Panas (Kuning Terang)
-        GeneralPath coreFlame = new GeneralPath();
-        coreFlame.moveTo(bx + w * 0.35, by + h);
-        coreFlame.quadTo(bx + w * 0.25, by + h * 0.65, bx + w * 0.5, by + h * 0.45);
-        coreFlame.quadTo(bx + w * 0.75, by + h * 0.65, bx + w * 0.65, by + h);
-        coreFlame.closePath();
-
-        g2d.setColor(new Color(255, 240, 120, 240));
-        g2d.fill(coreFlame);
+        // Perlapan api (animasi ember) dari atlas
+        // Kunci: "fire_hero_anim" (registrasi di GameAssets.build)
+        Atlas.INSTANCE.drawScreen(g2d, "fire_hero_anim",
+                x, y, 0, (int) width, (int) height, (long) GameState.getGameTime());
 
         // Bar Ketahanan Titik Api (Jika terluka)
         if (health < maxHealth) {

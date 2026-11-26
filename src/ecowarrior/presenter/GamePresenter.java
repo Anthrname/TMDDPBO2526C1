@@ -19,6 +19,7 @@ import ecowarrior.model.Achievement;
 import ecowarrior.model.AchievementDAO;
 import ecowarrior.model.GameState;
 import ecowarrior.view.GameFrame;
+import ecowarrior.assets.GameAssets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -52,6 +53,9 @@ public class GamePresenter implements Runnable {
         this.gameState = gameState;
         this.onGameOver = onGameOver;
 
+        // Siapkan atlas aset sebelum game pertama kali di-render.
+        GameAssets.init("resources/images");
+
         view.setMouseClickHandler(this::handleMouseClick);
         view.setOnPauseToggle(this::togglePause);
         view.setOnMuteToggle(() -> SoundManager.getInstance().toggleMute());
@@ -70,6 +74,8 @@ public class GamePresenter implements Runnable {
         long lastTime = System.nanoTime();
 
         while (running) {
+            GameState.tick();
+
             long now = System.nanoTime();
             double dt = (now - lastTime) / 1_000_000_000.0;
             lastTime = now;

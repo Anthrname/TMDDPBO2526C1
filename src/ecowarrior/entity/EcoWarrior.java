@@ -8,6 +8,8 @@ package ecowarrior.entity;
 
 import ecowarrior.config.GameConfig;
 import ecowarrior.model.RankTier;
+import ecowarrior.assets.Atlas;
+import ecowarrior.model.GameState;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -156,54 +158,25 @@ public class EcoWarrior extends GameObject {
     public void render(Graphics2D g2d) {
         if (!active) return;
 
-        int ix = (int) x;
-        int iy = (int) y;
-        int d = (int) width;
-
-        // Bayangan di tanah
-        g2d.setColor(new Color(0, 0, 0, 80));
-        g2d.fillOval(ix + 2, iy + d - 4, d - 4, 10);
+        // Gambar karakter dari atlas (animasi idle / jalan).
+        // Kunci: "eco_hero_anim" (registrasi di GameAssets.build)
+        Atlas.INSTANCE.drawScreen(g2d, "eco_hero_anim",
+                x, y, 0, (int) width, (int) height, (long) GameState.getGameTime());
 
         // Garis laser penargetan jika memiliki misi aktif
         if (targetEntity != null && targetEntity.isActive()) {
             g2d.setColor(new Color(52, 152, 219, 130));
-            g2d.setStroke(new BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[]{6f, 6f}, 0f));
-            g2d.drawLine((int) getCenterX(), (int) getCenterY(), (int) targetEntity.getCenterX(), (int) targetEntity.getCenterY());
+            g2d.setStroke(new BasicStroke(1.2f, BasicStroke.CAP_ROUND,
+                    BasicStroke.JOIN_ROUND, 1f, new float[]{6f, 6f}, 0f));
+            g2d.drawLine((int) getCenterX(), (int) getCenterY(),
+                    (int) targetEntity.getCenterX(), (int) targetEntity.getCenterY());
         }
 
-        // Badan Karakter Kuning Ceria (Sesuai diagram spesifikasi halaman 7)
-        g2d.setColor(new Color(241, 196, 15));
-        g2d.fillOval(ix, iy, d, d);
-
-        // Border luar lingkaran kuning emas
-        g2d.setColor(new Color(214, 137, 16));
-        g2d.setStroke(new BasicStroke(2.0f));
-        g2d.drawOval(ix, iy, d, d);
-
-        // Mata ramah & fokus
-        g2d.setColor(Color.BLACK);
-        g2d.fillOval(ix + 8, iy + 10, 5, 7);
-        g2d.fillOval(ix + 20, iy + 10, 5, 7);
-        g2d.setColor(Color.WHITE);
-        g2d.fillOval(ix + 10, iy + 11, 2, 2);
-        g2d.fillOval(ix + 22, iy + 11, 2, 2);
-
-        // Senyum ramah pejuang lingkungan
-        g2d.setColor(Color.BLACK);
-        g2d.setStroke(new BasicStroke(1.8f));
-        g2d.drawArc(ix + 9, iy + 14, 16, 10, 0, -180);
-
-        // Moncong meriam air / Water Blaster terpasang
-        double nozzleLen = 14;
-        int nx = (int) (getCenterX() + Math.cos(aimingAngle) * nozzleLen);
-        int ny = (int) (getCenterY() + Math.sin(aimingAngle) * nozzleLen);
-        g2d.setColor(new Color(41, 128, 185));
-        g2d.setStroke(new BasicStroke(4.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        g2d.drawLine((int) getCenterX(), (int) getCenterY(), nx, ny);
-
         // Badge lambang daun rank di atas kepala
-        g2d.setColor(rankTier.getBadgeColor());
-        g2d.fillOval(ix + d / 2 - 4, iy - 6, 8, 8);
+        if (rankTier != null) {
+            g2d.setColor(rankTier.getBadgeColor());
+            g2d.fillOval((int) (x + width / 2.0 - 4), (int) (y - 6), 8, 8);
+        }
     }
 }
 

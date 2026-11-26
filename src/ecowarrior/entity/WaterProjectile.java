@@ -6,6 +6,8 @@
 
 package ecowarrior.entity;
 
+import ecowarrior.assets.Atlas;
+import ecowarrior.model.GameState;
 import ecowarrior.config.GameConfig;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -94,21 +96,10 @@ public class WaterProjectile extends GameObject {
         g2d.setColor(new Color(10, 25, 20, 100));
         g2d.fillOval((int) (x + width / 2.0 - sw / 2.0), (int) (y + height / 2.0 - sh / 2.0), sw, sh);
 
-        // 2. Gambar bola air yang terangkat tinggi di udara sesuai koordinat Z
-        int drawY = (int) (y - z);
-        int drawX = (int) x;
-
-        // Efek aura air hidro
-        g2d.setColor(new Color(0, 200, 255, 130));
-        g2d.fillOval(drawX - 4, drawY - 4, (int) width + 8, (int) height + 8);
-
-        // Inti bola air
-        g2d.setColor(new Color(41, 128, 185));
-        g2d.fillOval(drawX, drawY, (int) width, (int) height);
-
-        // Kilau pantulan cahaya
-        g2d.setColor(new Color(212, 239, 252));
-        g2d.fillOval(drawX + 3, drawY + 2, (int) width - 7, (int) height - 7);
+        // 2. Gambar bola air proyektil dari atlas (animasi)
+        // Kunci: "water_shot" (registrasi di GameAssets.build)
+        Atlas.INSTANCE.drawScreen(g2d, "water_shot",
+                x, y, z, (int) width, (int) height, (long) GameState.getGameTime());
     }
 }
 

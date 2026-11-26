@@ -7,6 +7,8 @@
 package ecowarrior.entity;
 
 import ecowarrior.config.GameConfig;
+import ecowarrior.assets.Atlas;
+import ecowarrior.model.GameState;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -96,55 +98,24 @@ public class Destroyer extends GameObject {
     public void render(Graphics2D g2d) {
         if (!active) return;
 
-        int ix = (int) x;
-        int iy = (int) y;
-        int d = (int) width;
-
-        // Bayangan di tanah
-        g2d.setColor(new Color(0, 0, 0, 80));
-        g2d.fillOval(ix + 2, iy + d - 4, d - 4, 10);
-
-        // Lingkaran Karakter Merah (Sesuai diagram spesifikasi halaman 7)
-        g2d.setColor(new Color(231, 76, 60));
-        g2d.fillOval(ix, iy, d, d);
-
-        // Border luar lingkaran merah pekat
-        g2d.setColor(new Color(192, 57, 43));
-        g2d.setStroke(new BasicStroke(2.0f));
-        g2d.drawOval(ix, iy, d, d);
-
-        // Mata jahat (Kacamata asap / tatapan licik)
-        g2d.setColor(Color.BLACK);
-        g2d.fillOval(ix + 8, iy + 10, 6, 8);
-        g2d.fillOval(ix + 20, iy + 10, 6, 8);
-        g2d.setColor(Color.WHITE);
-        g2d.fillOval(ix + 9, iy + 11, 2, 2);
-        g2d.fillOval(ix + 21, iy + 11, 2, 2);
-
-        // Senyum menyeringai licik
-        g2d.setColor(Color.BLACK);
-        g2d.setStroke(new BasicStroke(1.8f));
-        g2d.drawArc(ix + 9, iy + 18, 16, 8, 0, -180);
-
-        // Indikator status jika terkena siraman air (Slow / Soaked)
-        if (slowTimer > 0) {
-            g2d.setColor(new Color(52, 152, 219, 180));
-            g2d.fillOval(ix + 4, iy - 6, 8, 8);
-            g2d.fillOval(ix + 20, iy - 8, 6, 6);
-        }
+        // Gambar karakter dari atlas (animasi idle / jalan).
+        // Kunci: "dest_hero_anim" (registrasi di GameAssets.build)
+        Atlas.INSTANCE.drawScreen(g2d, "dest_hero_anim",
+                x, y, 0, (int) width, (int) height, (long) GameState.getGameTime());
 
         // Bar darah/ketahanan di atas kepala jika terluka
         if (health < maxHealth) {
+            int d = (int) width;
             int barW = d;
             int barH = 4;
-            int barY = iy - 8;
+            int barY = (int) (y - 8);
             g2d.setColor(new Color(50, 50, 50, 180));
-            g2d.fillRect(ix, barY, barW, barH);
+            g2d.fillRect((int) x, barY, barW, barH);
             g2d.setColor(new Color(231, 76, 60));
             int currW = (int) ((health / maxHealth) * barW);
-            g2d.fillRect(ix, barY, currW, barH);
+            g2d.fillRect((int) x, barY, currW, barH);
             g2d.setColor(Color.WHITE);
-            g2d.drawRect(ix, barY, barW, barH);
+            g2d.drawRect((int) x, barY, barW, barH);
         }
     }
 }

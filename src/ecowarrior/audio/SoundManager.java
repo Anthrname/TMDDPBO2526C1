@@ -48,19 +48,16 @@ public class SoundManager {
     }
 
     private void initSounds() {
-        new Thread(() -> {
-            try {
-                menuBgmBytes = AudioSynthesizer.generateMenuBGM();
-                gameBgmBytes = AudioSynthesizer.generateGameBGM();
-                waterShootBytes = AudioSynthesizer.generateWaterShootSFX();
-                extinguishBytes = AudioSynthesizer.generateExtinguishSFX();
-                destroyerHitBytes = AudioSynthesizer.generateDestroyerHitSFX();
-                clickBytes = AudioSynthesizer.generateClickSFX();
-                System.out.println("[SoundManager] Inisialisasi audio sintesis legal berhasil disiapkan.");
-            } catch (Exception e) {
-                System.err.println("[SoundManager] Peringatan audio: " + e.getMessage());
-            }
-        }, "AudioInitThread").start();
+        // Generasi sinkron di sini (bukan thread background) agar byte audio
+        // selalu tersedia sebelum playBGM / playSFX dipanggil. Ini menghilangkan
+        // racecondition di mana BGM tidak berbunyi (bytes null) saat game mulai.
+        menuBgmBytes = AudioSynthesizer.generateMenuBGM();
+        gameBgmBytes = AudioSynthesizer.generateGameBGM();
+        waterShootBytes = AudioSynthesizer.generateWaterShootSFX();
+        extinguishBytes = AudioSynthesizer.generateExtinguishSFX();
+        destroyerHitBytes = AudioSynthesizer.generateDestroyerHitSFX();
+        clickBytes = AudioSynthesizer.generateClickSFX();
+        System.out.println("[SoundManager] Inisialisasi audio sintesis legal selesai.");
     }
 
     public synchronized void playMenuBGM() {
