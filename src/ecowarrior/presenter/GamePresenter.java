@@ -56,9 +56,6 @@ public class GamePresenter implements Runnable {
         view.setOnPauseToggle(this::togglePause);
         view.setOnMuteToggle(() -> SoundManager.getInstance().toggleMute());
         view.setOnSaveAndQuit(this::saveAndQuit);
-        view.setOnReturnToMenu(() -> {
-            saveAndQuit();
-        });
     }
 
     public void start() {
@@ -436,9 +433,11 @@ public class GamePresenter implements Runnable {
     }
 
     public void saveAndQuit() {
+        if (!running) return;
         running = false;
-        // Simpan statistik sesi ke database tachievement
-        Achievement updated = dao.saveSessionStats(
+
+        // 1. Simpan statistik sesi ke database tachievement secara permanen
+        dao.saveSessionStats(
                 gameState.getUsername(),
                 gameState.getSessionDestroyer(),
                 gameState.getSessionFire(),
@@ -446,15 +445,14 @@ public class GamePresenter implements Runnable {
         );
         SoundManager.getInstance().stopBGM();
 
+        // 2. Langsung kembali ke tampilan awal (Menu Utama) sesuai spesifikasi soal halaman 7:
+        // "Tombol space digunakan untuk menghentikan permainan dan kembali pada tampilan awal."
         javax.swing.SwingUtilities.invokeLater(() -> {
-            view.showGameOverDialogFull(
-                    gameState.getUsername(),
-                    gameState.getSessionScore(),
-                    gameState.getSessionDestroyer(),
-                    gameState.getSessionFire(),
-                    gameState.getTotalAchievementScore(),
-                    false
-            );
+            if (onGameOver != null) {
+                onGameOver.run();
+            } else {
+                view.closeGame();
+            }
         });
     }
 

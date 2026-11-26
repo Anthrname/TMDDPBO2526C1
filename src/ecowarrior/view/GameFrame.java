@@ -11,10 +11,16 @@ import ecowarrior.model.GameState;
 import ecowarrior.view.dialogs.GameOverDialog;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.function.BiConsumer;
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.KeyStroke;
 
 /**
  * GameFrame - Window utama permainan ECO WARRIOR (View Layer - Pola MVP).
@@ -36,15 +42,52 @@ public class GameFrame extends JFrame implements IGameView {
         setResizable(false);
 
         gamePanel = new GamePanel();
+        gamePanel.setFocusable(true);
         setLayout(new BorderLayout());
         getContentPane().setBackground(Color.BLACK);
         getContentPane().add(gamePanel, BorderLayout.CENTER);
 
         pack();
         setLocationRelativeTo(null);
+        setFocusable(true);
 
-        // Registrasi Keyboard Listener
-        addKeyListener(new KeyAdapter() {
+        // 1. Registrasi Key Bindings (WHEN_IN_FOCUSED_WINDOW)
+        // Menjamin tombol SPACE, P, M pasti berfungsi 100% meskipun fokus mouse berada di panel game!
+        InputMap inputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = getRootPane().getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "actionSpace");
+        actionMap.put("actionSpace", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (onSaveAndQuit != null) {
+                    onSaveAndQuit.run();
+                }
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_P, 0), "actionPause");
+        actionMap.put("actionPause", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (onPauseToggle != null) {
+                    onPauseToggle.run();
+                }
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_M, 0), "actionMute");
+        actionMap.put("actionMute", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (onMuteToggle != null) {
+                    onMuteToggle.run();
+                }
+            }
+        });
+
+        // 2. KeyListener ganda di Frame dan Panel sebagai proteksi cadangan
+        KeyAdapter keyAdapter = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 switch (e.getKeyCode()) {
@@ -53,8 +96,9 @@ public class GameFrame extends JFrame implements IGameView {
                     case KeyEvent.VK_M -> { if (onMuteToggle != null) onMuteToggle.run(); }
                 }
             }
-        });
-        setFocusable(true);
+        };
+        addKeyListener(keyAdapter);
+        gamePanel.addKeyListener(keyAdapter);
     }
 
     public GamePanel getGamePanel() {
