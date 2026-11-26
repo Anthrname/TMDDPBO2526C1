@@ -1,0 +1,25 @@
+# Compiled class files
+*.class
+out/
+bin/
+
+# Local database generated at runtime
+*.db
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Local logs
+*.log
